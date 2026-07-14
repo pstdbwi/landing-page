@@ -1,6 +1,8 @@
 import { fetchData } from "@/lib/fetch";
 import { qs } from "@/lib/utils";
 
+const PUBLIC_API_BASE_URL = "https://api.satuwakafindonesia.id";
+
 export const getCampaignDetail = async (campaignId: string): Promise<any> => {
   try {
     const response = await fetchData(`/campaigns/${campaignId}`, "GET", null, {});
@@ -148,7 +150,7 @@ export const getSpecialSectionById = async (
   })}`;
 
   try {
-    const response = await fetchData(endpoint, "GET", null, {});
+    const response = await fetchData(endpoint, "GET", null, {}, PUBLIC_API_BASE_URL);
 
     return response.data;
   } catch (error: any) {

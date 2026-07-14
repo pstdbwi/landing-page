@@ -1,6 +1,7 @@
-import { env } from "@/lib/env";
 import { qs } from "@/lib/utils";
 import axios from "axios";
+
+const PUBLIC_API2_BASE_URL = "https://api2.satuwakafindonesia.id";
 
 export const corporateProgram = async ({
   address,
@@ -21,7 +22,7 @@ export const corporateProgram = async ({
       active,
     });
 
-    const result = await axios.get(`${env.NEXT_PUBLIC_BASE_URL2}/corporates/program?${query}`);
+    const result = await axios.get(`${PUBLIC_API2_BASE_URL}/corporates/program?${query}`);
 
     return result?.data?.data?.items;
   } catch (error) {
