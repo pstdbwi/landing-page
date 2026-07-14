@@ -91,17 +91,17 @@ const localRouteDomains: Record<string, string> = {
 
 function resolveCurrentDomain() {
   const host = window.location.host;
-
-  if (!["localhost", "127.0.0.1"].some((localHost) => host.startsWith(localHost))) {
-    return host === "fesyarsumatra.satuwakaf.id" ? "fesyarsumatera.satuwakaf.id" : host;
-  }
-
+  const normalizedHost = host === "fesyarsumatra.satuwakaf.id" ? "fesyarsumatera.satuwakaf.id" : host;
   const pathname = window.location.pathname.toLowerCase();
-  const match = Object.entries(localRouteDomains)
+  const routeMatch = Object.entries(localRouteDomains)
     .sort(([a], [b]) => b.length - a.length)
     .find(([route]) => pathname === route || pathname.startsWith(`${route}/`));
 
-  return match?.[1] || host;
+  if (routeMatch && !SUB_DOMAIN.includes(normalizedHost)) {
+    return routeMatch[1];
+  }
+
+  return normalizedHost;
 }
 
 export function FeatureFlagProvider({ children }: { children: React.ReactNode }) {
