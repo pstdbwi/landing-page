@@ -13,6 +13,8 @@ type CampaignSearchResult = {
   };
 };
 
+type AssetField = "titleImageUrl" | "logoUrl" | "backgroundUrl";
+
 const fieldClassName =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10";
 
@@ -26,6 +28,7 @@ export default function NgopiAdminPage() {
   const [searchResults, setSearchResults] = useState<CampaignSearchResult[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [uploadingField, setUploadingField] = useState<AssetField | null>(null);
   const [status, setStatus] = useState("");
 
   const campaignIdsText = useMemo(() => config.campaignIds.join("\n"), [config.campaignIds]);
@@ -42,6 +45,39 @@ export default function NgopiAdminPage() {
 
   const updateField = (field: keyof NgopiLandingConfig, value: string) => {
     setConfig((current) => normalizeNgopiLandingConfig({ ...current, [field]: value }));
+  };
+
+  const uploadAsset = async (field: AssetField, file: File | null) => {
+    if (!file) return;
+
+    setUploadingField(field);
+    setStatus("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("target", field);
+
+      const response = await fetch("/api/admin/landing-assets", {
+        method: "POST",
+        headers: {
+          "x-admin-password": password,
+        },
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Upload gagal.");
+      }
+
+      updateField(field, result?.data?.url || "");
+      setStatus("File berhasil diupload. Klik Simpan Konfigurasi agar perubahan tampil di landing.");
+    } catch (error: any) {
+      setStatus(error?.message || "Upload gagal.");
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const updateCampaignIds = (value: string) => {
@@ -134,6 +170,35 @@ export default function NgopiAdminPage() {
     }
   };
 
+  const renderAssetField = ({
+    field,
+    label,
+    placeholder,
+  }: {
+    field: AssetField;
+    label: string;
+    placeholder: string;
+  }) => (
+    <label className="block space-y-2">
+      <span className={labelClassName}>{label}</span>
+      <input
+        className={fieldClassName}
+        value={config[field]}
+        onChange={(event) => updateField(field, event.target.value)}
+        placeholder={placeholder}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={(event) => uploadAsset(field, event.target.files?.[0] || null)}
+          className="block text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-950 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
+        />
+        {uploadingField === field ? <span className="text-xs font-semibold text-slate-500">Mengupload...</span> : null}
+      </div>
+    </label>
+  );
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-950">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6">
@@ -166,35 +231,23 @@ export default function NgopiAdminPage() {
               </label>
             </div>
 
-            <label className="space-y-2 block">
-              <span className={labelClassName}>Image Judul Landing Page</span>
-              <input
-                className={fieldClassName}
-                value={config.titleImageUrl}
-                onChange={(event) => updateField("titleImageUrl", event.target.value)}
-                placeholder="https://... atau /assets/..."
-              />
-            </label>
+            {renderAssetField({
+              field: "titleImageUrl",
+              label: "Image Judul Landing Page",
+              placeholder: "Upload file atau paste URL https://...",
+            })}
 
-            <label className="space-y-2 block">
-              <span className={labelClassName}>Logo</span>
-              <input
-                className={fieldClassName}
-                value={config.logoUrl}
-                onChange={(event) => updateField("logoUrl", event.target.value)}
-                placeholder="https://... atau /assets/..."
-              />
-            </label>
+            {renderAssetField({
+              field: "logoUrl",
+              label: "Logo",
+              placeholder: "Upload file atau paste URL https://...",
+            })}
 
-            <label className="space-y-2 block">
-              <span className={labelClassName}>Background</span>
-              <input
-                className={fieldClassName}
-                value={config.backgroundUrl}
-                onChange={(event) => updateField("backgroundUrl", event.target.value)}
-                placeholder="https://... atau /assets/..."
-              />
-            </label>
+            {renderAssetField({
+              field: "backgroundUrl",
+              label: "Background",
+              placeholder: "Upload file atau paste URL https://...",
+            })}
 
             <div className="space-y-3">
               <span className={labelClassName}>Program yang Ditampilkan</span>

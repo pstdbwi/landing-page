@@ -6,14 +6,31 @@ export const dynamic = "force-dynamic";
 
 function isAuthorized(request: Request) {
   const password = process.env.NGOPI_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
-  if (!password) return false;
+  if (!password) {
+    return {
+      ok: false,
+      message: "NGOPI_ADMIN_PASSWORD belum diset di environment Vercel.",
+    };
+  }
 
-  return request.headers.get("x-admin-password") === password;
+  if (request.headers.get("x-admin-password") !== password) {
+    return {
+      ok: false,
+      message: "Password admin salah. Pastikan sama dengan NGOPI_ADMIN_PASSWORD di Vercel.",
+    };
+  }
+
+  return {
+    ok: true,
+    message: "",
+  };
 }
 
 export async function GET(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const authorization = isAuthorized(request);
+
+  if (!authorization.ok) {
+    return NextResponse.json({ message: authorization.message }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -24,8 +41,10 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const authorization = isAuthorized(request);
+
+  if (!authorization.ok) {
+    return NextResponse.json({ message: authorization.message }, { status: 401 });
   }
 
   try {
