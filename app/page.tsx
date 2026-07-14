@@ -38,85 +38,34 @@ const globalForPg = globalThis as typeof globalThis & {
 
 const FALLBACK_CAMPAIGNS: Campaign[] = [
   {
-    id: '1',
-    title: 'Wakaf Ternak Produktif untuk Santri Papua Barat',
-    short_description: 'Baitul Wakaf',
-    image_url: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 49_960_000,
-    target_amount: 49_900_000,
-    city_name: 'Manokwari',
-  },
-  {
-    id: '2',
-    title: 'Wakaf Produktif Budidaya Pangan untuk Santri',
-    short_description: 'MPW PW Muhammadiyah Bengkulu',
-    image_url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 100_050_000,
-    target_amount: 100_000_000,
-    city_name: 'Kota Bengkulu',
-  },
-  {
-    id: '3',
-    title: 'Wakaf Sumur Masjid Nurul Ijtihad Maros',
-    short_description: 'Yayasan Daarut Tauhiid',
-    image_url: 'https://images.unsplash.com/photo-1541971875076-8f970d573be6?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 71_298_000,
-    target_amount: 150_000_000,
-    city_name: 'Maros',
-  },
-  {
-    id: '4',
-    title: 'Wakaf Sumur Air Bersih Pesantren di Sulawesi',
-    short_description: 'Yayasan Wakaf Infaq Zakat dan Shodaqoh Pesantren',
-    image_url: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=900&q=85',
+    id: 'fallback-1',
+    title: 'Wakaf Sumur Air Bersih untuk Pesantren',
+    short_description: 'Program wakaf air bersih untuk mendukung kegiatan santri dan masyarakat sekitar.',
+    image_url: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1200&q=85',
     donation_net_amount: 80_000_000,
-    target_amount: 80_000_000,
-    city_name: 'Morowali',
+    donation_target: 120_000_000,
+    lembaga_name: 'SatuWakaf Indonesia',
+    city_name: 'Indonesia',
   },
   {
-    id: '5',
-    title: 'Wakaf Produktif Budidaya Pisang untuk Santri',
-    short_description: 'Yayasan Solo Peduli Ummat',
-    image_url: 'https://images.unsplash.com/photo-1598512752271-33f913a5af13?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 99_036_000,
-    target_amount: 99_036_000,
-    city_name: 'Karanganyar',
-  },
-  {
-    id: '6',
-    title: 'Wakaf Sumber Air Bersih di Kabupaten Cianjur',
-    short_description: 'Wakaf Al Azhar',
-    image_url: 'https://images.unsplash.com/photo-1574482620811-1aa16ffe3c82?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 44_910_000,
-    target_amount: 42_660_000,
-    city_name: 'Cianjur',
-  },
-  {
-    id: '7',
-    title: 'Wakaf Renovasi Rumah Tahfidz',
-    short_description: 'Wiztren Indonesia',
-    image_url: 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 38_250_000,
-    target_amount: 75_000_000,
-    city_name: 'Bandung',
-  },
-  {
-    id: '8',
+    id: 'fallback-2',
     title: 'Wakaf Pendidikan untuk Generasi Qurani',
-    short_description: 'Bank Indonesia Peduli',
-    image_url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=900&q=85',
+    short_description: 'Dukung sarana belajar dan pembinaan penghafal Al-Quran.',
+    image_url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=85',
     donation_net_amount: 62_775_000,
-    target_amount: 100_000_000,
+    donation_target: 100_000_000,
+    lembaga_name: 'Bank Indonesia Peduli',
     city_name: 'Jakarta',
   },
   {
-    id: '9',
-    title: 'Wakaf Pangan untuk Keluarga Prasejahtera',
-    short_description: 'SatuWakaf Indonesia',
-    image_url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=900&q=85',
-    donation_net_amount: 55_450_000,
-    target_amount: 90_000_000,
-    city_name: 'Bogor',
+    id: 'fallback-3',
+    title: 'Wakaf Produktif Budidaya Pangan untuk Santri',
+    short_description: 'Wakaf produktif untuk kemandirian pesantren dan pemberdayaan ekonomi umat.',
+    image_url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=85',
+    donation_net_amount: 100_050_000,
+    donation_target: 180_000_000,
+    lembaga_name: 'Mitra Wakaf',
+    city_name: 'Bengkulu',
   },
 ];
 
@@ -157,6 +106,7 @@ function normalizeCampaign(row: any): Campaign {
     row.thumbnail_url ||
     row.campaign_banner_url ||
     row.featured_image;
+  const locationCity = typeof row.location === 'object' ? row.location?.city : undefined;
 
   return {
     id: String(row.id),
@@ -170,8 +120,8 @@ function normalizeCampaign(row: any): Campaign {
     donation_target: Number(row.donation_target || row.target_amount || 0),
     category_name: row.category_name,
     lembaga_name: row.lembaga_name || row.lembaga?.name || row.institution_name,
-    city_name: row.city_name || row.location?.city || row.city?.name,
-    location: row.location_name || row.location,
+    city_name: row.city_name || locationCity || row.city?.name,
+    location: typeof row.location === 'string' ? row.location : locationCity,
     status: row.status,
   };
 }
@@ -245,6 +195,12 @@ function campaignImage(campaign: Campaign) {
   return campaign.image_url || campaign.banner_url || campaign.image || FALLBACK_CAMPAIGNS[0].image_url;
 }
 
+function progressPercent(campaign: Campaign) {
+  const collected = campaign.donation_net_amount || 0;
+  const target = campaignTarget(campaign);
+  return Math.min(100, Math.round((collected / target) * 100));
+}
+
 export default async function HomePage({
   searchParams,
 }: {
@@ -262,45 +218,94 @@ export default async function HomePage({
       return 0;
     });
 
+  const featured = visibleCampaigns[0] || FALLBACK_CAMPAIGNS[0];
+  const featuredImage = campaignImage(featured);
+  const featuredLocation = featured.city_name || featured.location || 'Indonesia';
+  const totalCollected = visibleCampaigns.reduce((sum, campaign) => sum + (campaign.donation_net_amount || 0), 0);
+
   return (
-    <main className="ramadan-page">
-      <div className="top-pattern" aria-hidden="true" />
-      <div className="gold-arch" aria-hidden="true" />
-      <div className="stars" aria-hidden="true" />
+    <main className="landing-page">
+      <section className="hero-section">
+        <nav className="top-nav" aria-label="Navigasi utama">
+          <a href="#" className="brand-mark">
+            <span>SW</span>
+            <strong>SatuWakaf</strong>
+          </a>
+          <div className="nav-pill">Ikhtiar Ramadhan 1447H</div>
+        </nav>
 
-      <header className="campaign-header">
-        <div className="partner-logos" aria-label="Mitra program">
-          <span className="bi-mark">B</span>
-          <span className="bi-name">BANK INDONESIA<small>BANK SENTRAL REPUBLIK INDONESIA</small></span>
-          <span className="round-logo">SW</span>
-          <span className="crest-logo">*</span>
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <span className="eyebrow">Platform Wakaf Pilihan</span>
+            <h1>Temukan program wakaf yang nyata, terukur, dan siap didukung hari ini.</h1>
+            <p>
+              Setiap campaign ditarik dari database dan endpoint yang tersambung, termasuk gambar,
+              nominal terkumpul, lokasi, dan lembaga pengelola.
+            </p>
+            <div className="hero-actions">
+              <a href="#program-wakaf" className="primary-action">Lihat Program</a>
+              <a href={`#wakaf-${featured.id}`} className="secondary-action">Wakaf Unggulan</a>
+            </div>
+            <div className="stat-strip" aria-label="Ringkasan program">
+              <div>
+                <strong>{visibleCampaigns.length}</strong>
+                <span>Program tampil</span>
+              </div>
+              <div>
+                <strong>{rupiah(totalCollected)}</strong>
+                <span>Total terkumpul</span>
+              </div>
+              <div>
+                <strong>30 detik</strong>
+                <span>Data diperbarui</span>
+              </div>
+            </div>
+          </div>
+
+          <a className="featured-card" href={`#wakaf-${featured.id}`} aria-label={`Wakaf untuk ${featured.title}`}>
+            <img src={featuredImage} alt={featured.title} />
+            <div className="featured-overlay">
+              <span>Program Unggulan</span>
+              <h2>{featured.title}</h2>
+              <p>{featured.lembaga_name || featured.short_description || 'SatuWakaf Indonesia'} - {featuredLocation}</p>
+              <div className="featured-progress">
+                <span style={{ width: `${progressPercent(featured)}%` }} />
+              </div>
+              <strong>{rupiah(featured.donation_net_amount || 0)}</strong>
+            </div>
+          </a>
         </div>
-        <h1>IKHTIAR RAMADHAN 1447H</h1>
-      </header>
+      </section>
 
-      <section className="campaign-content" aria-label="Daftar program wakaf">
-        <form className="toolbar" method="get">
-          <label className="search-box">
-            <span aria-hidden="true">Cari</span>
-            <input name="q" defaultValue={searchParams?.q} placeholder="Pencarian" aria-label="Cari program wakaf" />
-          </label>
-          <label className="sort-box">
-            <span aria-hidden="true">Urut</span>
-            <select name="sort" defaultValue={sort} aria-label="Urutkan program">
-              <option value="default">Urutkan</option>
-              <option value="highest">Donasi tertinggi</option>
-              <option value="lowest">Donasi terendah</option>
-            </select>
-          </label>
-          <button type="submit">Terapkan</button>
-        </form>
+      <section id="program-wakaf" className="campaign-section" aria-label="Daftar program wakaf">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">Program Tersedia</span>
+            <h2>Pilih campaign wakaf</h2>
+          </div>
+          <form className="toolbar" method="get">
+            <label className="search-box">
+              <span>Cari</span>
+              <input name="q" defaultValue={searchParams?.q} placeholder="Judul campaign" aria-label="Cari program wakaf" />
+            </label>
+            <label className="sort-box">
+              <span>Urutkan</span>
+              <select name="sort" defaultValue={sort} aria-label="Urutkan program">
+                <option value="default">Terbaru</option>
+                <option value="highest">Donasi tertinggi</option>
+                <option value="lowest">Donasi terendah</option>
+              </select>
+            </label>
+            <button type="submit">Terapkan</button>
+          </form>
+        </div>
 
         {visibleCampaigns.length ? (
           <div className="campaign-grid">
             {visibleCampaigns.map((campaign) => {
               const collected = campaign.donation_net_amount || 0;
               const target = campaignTarget(campaign);
-              const progress = Math.min(100, Math.round((collected / target) * 100));
+              const progress = progressPercent(campaign);
               const completed = collected >= target;
               const image = campaignImage(campaign);
               const location = campaign.city_name || campaign.location || 'Indonesia';
@@ -311,25 +316,27 @@ export default async function HomePage({
                   <article className="campaign-card">
                     <a className="campaign-image" href={`#wakaf-${campaign.id}`} aria-label={`Wakaf untuk ${campaign.title}`}>
                       <img src={image} alt={campaign.title} />
-                      <span className="play-button" aria-hidden="true">Buka</span>
+                      <span className="image-badge">Buka</span>
                     </a>
                     <div className="card-body">
                       <div className="card-tags">
                         <span>Wakaf</span>
-                        <span>Abadi</span>
                         <small>{location}</small>
                       </div>
-                      <h2>{campaign.title}</h2>
-                      <p className="institution">{institution} <b>OK</b></p>
+                      <h3>{campaign.title}</h3>
+                      <p className="institution">{institution}</p>
                       <div className="progress-track" aria-label={`Progres ${progress}%`}>
                         <span style={{ width: `${progress}%` }} />
                       </div>
                       <div className="amount-row">
-                        <strong>{rupiah(collected)}</strong>
-                        <span>tak terbatas</span>
+                        <div>
+                          <small>Terkumpul</small>
+                          <strong>{rupiah(collected)}</strong>
+                        </div>
+                        <span>{progress}%</span>
                       </div>
                       <div className="target-row">
-                        <small>dari target <b>{rupiah(target)}</b></small>
+                        <small>Target {rupiah(target)}</small>
                         <a href={`#wakaf-${campaign.id}`} className={completed ? 'completed' : ''}>
                           {completed ? 'Tercapai' : 'Yuk Wakaf'}
                         </a>
@@ -344,7 +351,7 @@ export default async function HomePage({
                       <div className="modal-hero">
                         <img src={image} alt="" />
                         <div>
-                          <span>Program Wakaf</span>
+                          <span>Wakaf Sekarang</span>
                           <h2 id={`wakaf-title-${campaign.id}`}>{campaign.title}</h2>
                           <p>{institution} - {location}</p>
                         </div>
@@ -360,34 +367,35 @@ export default async function HomePage({
                           <small>Nominal Wakaf minimal Rp 10.000</small>
                         </label>
 
-                        <label>
-                          Nama Anda <b>*</b>
-                          <input name="name" placeholder="Masukkan Nama Anda" required />
-                        </label>
+                        <div className="form-grid">
+                          <label>
+                            Nama Anda <b>*</b>
+                            <input name="name" placeholder="Masukkan nama anda" required />
+                          </label>
+                          <label>
+                            No. HP Anda
+                            <input name="phone" placeholder="08..." />
+                          </label>
+                        </div>
 
                         <label>
-                          No. HP Anda (Opsional)
-                          <input name="phone" placeholder="08..." />
-                        </label>
-
-                        <label>
-                          Email Anda (Opsional)
+                          Email Anda
                           <input name="email" type="email" placeholder="Masukkan email anda" />
                         </label>
 
                         <div className="switch-row">
-                          <label><input type="checkbox" /> <span>Sembunyikan nama saya dari publikasi (Daftar Wakif)</span></label>
+                          <label><input type="checkbox" /> <span>Sembunyikan nama saya dari publikasi</span></label>
                           <label><input type="checkbox" /> <span>Wakaf untuk orang lain</span></label>
                         </div>
 
                         <div className="terms">
-                          <p><b>1. Tujuan Pengumpulan:</b> memastikan profil wakif dapat diverifikasi dengan informasi yang valid agar syarat sah berwakaf terpenuhi.</p>
-                          <p><b>2. Komitmen:</b> data pribadi dikelola dan dijaga sesuai aturan perlindungan data yang berlaku.</p>
+                          <p><b>1. Tujuan Pengumpulan:</b> memastikan profil wakif dapat diverifikasi dengan informasi yang valid.</p>
+                          <p><b>2. Komitmen:</b> data pribadi dikelola sesuai aturan perlindungan data yang berlaku.</p>
                         </div>
 
                         <label>
-                          Doa & Harapan (Opsional)
-                          <textarea name="prayer" placeholder="Tuliskan doa & harapan anda" />
+                          Doa dan Harapan
+                          <textarea name="prayer" placeholder="Tuliskan doa dan harapan anda" />
                         </label>
 
                         <div className="payment-box">
@@ -411,11 +419,6 @@ export default async function HomePage({
           <div className="empty-state">Program yang Anda cari belum ditemukan.</div>
         )}
       </section>
-
-      <div className="mosque-silhouette" aria-hidden="true" />
-      <div className="foreground-hills" aria-hidden="true" />
-      <div className="corner-decor corner-left" aria-hidden="true">C</div>
-      <div className="corner-decor corner-right" aria-hidden="true">*</div>
     </main>
   );
 }
