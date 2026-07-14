@@ -1,0 +1,37 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "J5G65QVAXV.id.bwi.ziswafindonesia",
+        "paths": [
+          "/campaign/*",
+          "/lembaga/*"
+        ],
+        "components": [
+          {
+            "/": "/campaign/*"
+          },
+          {
+            "/": "/lembaga/*"
+          }
+        ]
+      },
+      {
+        "appID": "J5G65QVAXV.id.bwi.deeplink",
+        "paths": [
+          "/campaign/*",
+          "/lembaga/*"
+        ],
+        "components": [
+          {
+            "/": "/campaign/*"
+          },
+          {
+            "/": "/lembaga/*"
+          }
+        ]
+      }
+    ]
+  }
+}

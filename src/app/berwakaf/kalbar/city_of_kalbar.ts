@@ -1,0 +1,17 @@
+export const CITY_OF_KALBAR = [
+  { id: 315, name: "SEMUA KOTA", code: "", value: "", label: "SEMUA KOTA" },
+  { id: 315, name: "SAMBAS", code: "61.01", value: "61.01", label: "SAMBAS" },
+  { id: 317, name: "SANGGAU", code: "61.03", value: "61.03", label: "SANGGAU" },
+  { id: 318, name: "KETAPANG", code: "61.04", value: "61.04", label: "KETAPANG" },
+  { id: 319, name: "SINTANG", code: "61.05", value: "61.05", label: "SINTANG" },
+  { id: 320, name: "KAPUAS HULU", code: "61.06", value: "61.06", label: "KAPUAS HULU" },
+  { id: 322, name: "LANDAK", code: "61.08", value: "61.08", label: "LANDAK" },
+  { id: 323, name: "SEKADAU", code: "61.09", value: "61.09", label: "SEKADAU" },
+  { id: 324, name: "MELAWI", code: "61.10", value: "61.10", label: "MELAWI" },
+  { id: 325, name: "KAYONG UTARA", code: "61.11", value: "61.11", label: "KAYONG UTARA" },
+  { id: 327, name: "KOTA PONTIANAK", code: "61.71", value: "61.71", label: "KOTA PONTIANAK" },
+  { id: 328, name: "KOTA SINGKAWANG", code: "61.72", value: "61.72", label: "KOTA SINGKAWANG" },
+  { id: 316, name: "MEMPAWAH", code: "61.02", value: "61.02", label: "MEMPAWAH" },
+  { id: 321, name: "BENGKAYANG", code: "61.07", value: "61.07", label: "BENGKAYANG" },
+  { id: 326, name: "KUBU RAYA", code: "61.12", value: "61.12", label: "KUBU RAYA" },
+];

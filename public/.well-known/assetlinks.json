@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "id.bwi.ziswafindonesia",
+      "sha256_cert_fingerprints": [
+        "D1:CB:93:3F:70:A8:93:30:44:17:3D:B7:F7:CA:F5:65:F7:46:86:78:65:DC:FE:0E:1B:63:BE:E6:37:60:41:3B",
+        "FD:1A:35:68:66:46:DB:D3:A1:67:4C:F9:A0:01:BA:9D:67:E4:16:D8:99:B0:62:BB:7F:35:DD:9D:A0:D5:19:3F"
+      ]
+    }
+  }
+]

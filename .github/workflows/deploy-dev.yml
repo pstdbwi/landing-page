@@ -1,0 +1,56 @@
+name: Deploy to dev
+
+env:
+  CONTEXT_DIR: './'
+  REPO_NAME: ${{ github.repository }}
+  DOCKER_REGISTRY: ghcr.io
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: |
+          touch .env
+          echo "IMAGE_NAME_WITH_REGISTRY=$DOCKER_REGISTRY/$REPO_NAME" >> $GITHUB_ENV
+          export IMAGE_NAME_WITH_REGISTRY=$DOCKER_REGISTRY/$REPO_NAME
+          echo "FULL_IMAGE_NAME=$IMAGE_NAME_WITH_REGISTRY:$GITHUB_SHA-gitsha" >> $GITHUB_ENV
+          echo "CAPROVER_APP=$CAPROVER_APP" >> $GITHUB_ENV
+          echo "CAPROVER_APP_TOKEN=$CAPROVER_APP_TOKEN" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_BASE_URL='https://api.uat.ziswafindonesia.id'" >> .env
+          echo "NEXT_PUBLIC_BASE_URL_PAYMENT='https://payment.uat.ziswafindonesia.id'" >> .env
+          echo "NEXTAUTH_URL='https://whitelabel.uat.ziswafindonesia.id'" >> .env
+          echo "NEXT_PUBLIC_NEXTAUTH_URL='https://whitelabel.uat.ziswafindonesia.id'" >> .env
+          echo "NEXT_PUBLIC_FACEBOOK_CLIENT_ID=${{ secrets.NEXT_PUBLIC_FACEBOOK_CLIENT_ID }}" >> .env
+          echo "NEXT_PUBLIC_FACEBOOK_CLIENT_SECRET=${{ secrets.NEXT_PUBLIC_FACEBOOK_CLIENT_SECRET }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_GOOGLE_CLIENT_ID }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_GOOGLE_SECRET_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_GOOGLE_SECRET_ID }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" >> .env
+          echo "NEXT_PUBLIC_NEXTAUTH_SECRET=${{ secrets.NEXT_PUBLIC_NEXTAUTH_SECRET }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL=${{ secrets.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL }}" >> .env
+          echo "NEXT_PUBLIC_FIREBASE_PRIVATE_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY }}" >> .env
+          echo "NEXT_PUBLIC_BASIC_AUTH_USERNAME=${{ secrets.NEXT_PUBLIC_BASIC_AUTH_USERNAME }}" >> .env
+          echo "NEXT_PUBLIC_BASIC_AUTH_PASSWORD=${{ secrets.NEXT_PUBLIC_BASIC_AUTH_PASSWORD }}" >> .env
+
+        env:
+          CAPROVER_APP: ${{ secrets.CAPROVER_APP_NAME }}
+          CAPROVER_APP_TOKEN: ${{ secrets.CAPROVER_APP_TOKEN }}
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.ACTION_ACTOR }}
+          password: ${{ secrets.ACTION_ACTOR_PASSWORD }}
+      - name: Build and Push Release to DockerHub
+        shell: bash
+        run: make build-and-publish-action
+      - name: Deploy to CapRover
+        uses: caprover/deploy-from-github@d76580d79952f6841c453bb3ed37ef452b19752c
+        with:
+          server: ${{ secrets.CAPROVER_HOST }}
+          app: ${{ env.CAPROVER_APP }}
+          token: '${{ env.CAPROVER_APP_TOKEN }}'
+          image: '${{ env.FULL_IMAGE_NAME }}'
