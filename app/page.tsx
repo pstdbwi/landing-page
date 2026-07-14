@@ -1,3 +1,8 @@
+import { Pool } from 'pg';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 30;
+
 type Campaign = {
   id: string;
   title: string;
@@ -14,6 +19,50 @@ type Campaign = {
   location?: string;
   status?: string;
 };
+
+type CampaignRow = {
+  id: string;
+  title: string;
+  short_description: string | null;
+  banner_url: string | null;
+  donation_net_amount: number | string | null;
+  donation_target: number | string | null;
+  city_name: string | null;
+  lembaga_name: string | null;
+};
+
+const globalForPg = globalThis as typeof globalThis & {
+  campaignLandingPool?: Pool;
+};
+
+function databasePool() {
+  if (globalForPg.campaignLandingPool) return globalForPg.campaignLandingPool;
+
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const host = process.env.POSTGRE_HOST || process.env.DB_HOST;
+  const user = process.env.POSTGRE_USERNAME || process.env.DB_USER;
+  const password = process.env.POSTGRE_PASSWORD || process.env.DB_PASSWORD;
+  const database = process.env.POSTGRE_NAME || process.env.DB_NAME || 'postgres';
+  const port = Number(process.env.POSTGRE_PORT || process.env.DB_PORT || 5432);
+  const sslMode = process.env.POSTGRE_SSLMODE || process.env.DB_SSLMODE || 'require';
+  const ssl = sslMode === 'disable' ? false : { rejectUnauthorized: false };
+
+  if (!connectionString && (!host || !user || !password)) return null;
+
+  globalForPg.campaignLandingPool = connectionString
+    ? new Pool({ connectionString, ssl })
+    : new Pool({ host, port, user, password, database, ssl });
+
+  return globalForPg.campaignLandingPool;
+}
+
+function assetUrl(path?: string | null) {
+  if (!path) return undefined;
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const baseUrl = process.env.ASSET_BASE_URL || 'https://storage.googleapis.com/ziswaf-asset-stg';
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+}
 
 const FALLBACK_CAMPAIGNS: Campaign[] = [
   {
@@ -100,8 +149,52 @@ const FALLBACK_CAMPAIGNS: Campaign[] = [
 ];
 
 async function fetchCampaigns(): Promise<Campaign[]> {
+  const db = databasePool();
+  if (db) {
+    try {
+      const result = await db.query<CampaignRow>(`
+        SELECT
+          c.id::text,
+          c.title,
+          c.short_description,
+          c.banner_url,
+          COALESCE(w.total_donation_amount, 0) AS donation_net_amount,
+          COALESCE(c.donation_target, 0) AS donation_target,
+          cities.name AS city_name,
+          c.lembaga_name
+        FROM public.campaigns c
+        LEFT JOIN public.campaign_wallets w ON w.campaign_id = c.id
+        LEFT JOIN public.cities cities ON cities.id = c.city_id
+        WHERE c.deleted_at IS NULL
+          AND c.status_id = 1
+        ORDER BY
+          COALESCE(c.priority_seq, 999999) ASC,
+          c.updated_at DESC NULLS LAST
+        LIMIT 9
+      `);
+
+      const campaigns = result.rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        short_description: row.short_description || undefined,
+        image_url: assetUrl(row.banner_url),
+        banner_url: assetUrl(row.banner_url),
+        donation_net_amount: Number(row.donation_net_amount || 0),
+        donation_target: Number(row.donation_target || 0),
+        lembaga_name: row.lembaga_name || undefined,
+        city_name: row.city_name || undefined,
+      }));
+
+      if (campaigns.length > 0) return campaigns;
+    } catch (error) {
+      console.error('Failed to fetch campaigns from database', error);
+    }
+  }
+
   try {
-    const apiBaseUrl = process.env.CAMPAIGN_API_URL || 'http://localhost:3003';
+    const apiBaseUrl = process.env.CAMPAIGN_API_URL;
+    if (!apiBaseUrl) throw new Error('CAMPAIGN_API_URL is not configured');
+
     const res = await fetch(`${apiBaseUrl}/api/campaigns/list-external?page=0&size=9&pagination=true`, {
       next: { revalidate: 30 },
     });
