@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Pool } from 'pg';
 
 export const dynamic = 'force-dynamic';
@@ -34,35 +35,6 @@ type CampaignRow = {
 const globalForPg = globalThis as typeof globalThis & {
   campaignLandingPool?: Pool;
 };
-
-function databasePool() {
-  if (globalForPg.campaignLandingPool) return globalForPg.campaignLandingPool;
-
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  const host = process.env.POSTGRE_HOST || process.env.DB_HOST;
-  const user = process.env.POSTGRE_USERNAME || process.env.DB_USER;
-  const password = process.env.POSTGRE_PASSWORD || process.env.DB_PASSWORD;
-  const database = process.env.POSTGRE_NAME || process.env.DB_NAME || 'postgres';
-  const port = Number(process.env.POSTGRE_PORT || process.env.DB_PORT || 5432);
-  const sslMode = process.env.POSTGRE_SSLMODE || process.env.DB_SSLMODE || 'require';
-  const ssl = sslMode === 'disable' ? false : { rejectUnauthorized: false };
-
-  if (!connectionString && (!host || !user || !password)) return null;
-
-  globalForPg.campaignLandingPool = connectionString
-    ? new Pool({ connectionString, ssl })
-    : new Pool({ host, port, user, password, database, ssl });
-
-  return globalForPg.campaignLandingPool;
-}
-
-function assetUrl(path?: string | null) {
-  if (!path) return undefined;
-  if (/^https?:\/\//i.test(path)) return path;
-
-  const baseUrl = process.env.ASSET_BASE_URL || 'https://storage.googleapis.com/ziswaf-asset-stg';
-  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-}
 
 const FALLBACK_CAMPAIGNS: Campaign[] = [
   {
@@ -148,6 +120,62 @@ const FALLBACK_CAMPAIGNS: Campaign[] = [
   },
 ];
 
+function databasePool() {
+  if (globalForPg.campaignLandingPool) return globalForPg.campaignLandingPool;
+
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const host = process.env.POSTGRE_HOST || process.env.DB_HOST;
+  const user = process.env.POSTGRE_USERNAME || process.env.DB_USER;
+  const password = process.env.POSTGRE_PASSWORD || process.env.DB_PASSWORD;
+  const database = process.env.POSTGRE_NAME || process.env.DB_NAME || 'postgres';
+  const port = Number(process.env.POSTGRE_PORT || process.env.DB_PORT || 5432);
+  const sslMode = process.env.POSTGRE_SSLMODE || process.env.DB_SSLMODE || 'require';
+  const ssl = sslMode === 'disable' ? false : { rejectUnauthorized: false };
+
+  if (!connectionString && (!host || !user || !password)) return null;
+
+  globalForPg.campaignLandingPool = connectionString
+    ? new Pool({ connectionString, ssl })
+    : new Pool({ host, port, user, password, database, ssl });
+
+  return globalForPg.campaignLandingPool;
+}
+
+function assetUrl(path?: string | null) {
+  if (!path) return undefined;
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const baseUrl = process.env.ASSET_BASE_URL || 'https://storage.googleapis.com/ziswaf-asset-stg';
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+}
+
+function normalizeCampaign(row: any): Campaign {
+  const imagePath =
+    row.image_url ||
+    row.banner_url ||
+    row.image ||
+    row.thumbnail_url ||
+    row.campaign_banner_url ||
+    row.featured_image;
+
+  return {
+    id: String(row.id),
+    title: row.title || row.campaign_title || 'Program Wakaf',
+    short_description: row.short_description || row.summary || row.description,
+    image_url: assetUrl(imagePath),
+    banner_url: assetUrl(row.banner_url || row.campaign_banner_url),
+    image: assetUrl(row.image),
+    donation_net_amount: Number(row.donation_net_amount || row.final_donation_amount || row.total_donation_amount || 0),
+    target_amount: Number(row.target_amount || row.donation_target || 0),
+    donation_target: Number(row.donation_target || row.target_amount || 0),
+    category_name: row.category_name,
+    lembaga_name: row.lembaga_name || row.lembaga?.name || row.institution_name,
+    city_name: row.city_name || row.location?.city || row.city?.name,
+    location: row.location_name || row.location,
+    status: row.status,
+  };
+}
+
 async function fetchCampaigns(): Promise<Campaign[]> {
   const db = databasePool();
   if (db) {
@@ -173,18 +201,7 @@ async function fetchCampaigns(): Promise<Campaign[]> {
         LIMIT 9
       `);
 
-      const campaigns = result.rows.map((row) => ({
-        id: row.id,
-        title: row.title,
-        short_description: row.short_description || undefined,
-        image_url: assetUrl(row.banner_url),
-        banner_url: assetUrl(row.banner_url),
-        donation_net_amount: Number(row.donation_net_amount || 0),
-        donation_target: Number(row.donation_target || 0),
-        lembaga_name: row.lembaga_name || undefined,
-        city_name: row.city_name || undefined,
-      }));
-
+      const campaigns = result.rows.map((row) => normalizeCampaign(row));
       if (campaigns.length > 0) return campaigns;
     } catch (error) {
       console.error('Failed to fetch campaigns from database', error);
@@ -210,7 +227,7 @@ async function fetchCampaigns(): Promise<Campaign[]> {
           ? payload.data
           : [];
 
-    return rows.length > 0 ? rows : FALLBACK_CAMPAIGNS;
+    return rows.length > 0 ? rows.map((row: any) => normalizeCampaign(row)) : FALLBACK_CAMPAIGNS;
   } catch {
     return FALLBACK_CAMPAIGNS;
   }
@@ -222,6 +239,10 @@ function rupiah(value = 0) {
 
 function campaignTarget(campaign: Campaign) {
   return campaign.target_amount || campaign.donation_target || Math.max((campaign.donation_net_amount || 0) * 2, 50_000_000);
+}
+
+function campaignImage(campaign: Campaign) {
+  return campaign.image_url || campaign.banner_url || campaign.image || FALLBACK_CAMPAIGNS[0].image_url;
 }
 
 export default async function HomePage({
@@ -252,7 +273,7 @@ export default async function HomePage({
           <span className="bi-mark">B</span>
           <span className="bi-name">BANK INDONESIA<small>BANK SENTRAL REPUBLIK INDONESIA</small></span>
           <span className="round-logo">SW</span>
-          <span className="crest-logo">✦</span>
+          <span className="crest-logo">*</span>
         </div>
         <h1>IKHTIAR RAMADHAN 1447H</h1>
       </header>
@@ -260,11 +281,11 @@ export default async function HomePage({
       <section className="campaign-content" aria-label="Daftar program wakaf">
         <form className="toolbar" method="get">
           <label className="search-box">
-            <span aria-hidden="true">⌕</span>
+            <span aria-hidden="true">Cari</span>
             <input name="q" defaultValue={searchParams?.q} placeholder="Pencarian" aria-label="Cari program wakaf" />
           </label>
           <label className="sort-box">
-            <span aria-hidden="true">⇅</span>
+            <span aria-hidden="true">Urut</span>
             <select name="sort" defaultValue={sort} aria-label="Urutkan program">
               <option value="default">Urutkan</option>
               <option value="highest">Donasi tertinggi</option>
@@ -281,39 +302,108 @@ export default async function HomePage({
               const target = campaignTarget(campaign);
               const progress = Math.min(100, Math.round((collected / target) * 100));
               const completed = collected >= target;
+              const image = campaignImage(campaign);
+              const location = campaign.city_name || campaign.location || 'Indonesia';
+              const institution = campaign.lembaga_name || campaign.short_description || 'SatuWakaf Indonesia';
 
               return (
-                <article key={campaign.id} className="campaign-card">
-                  <div className="campaign-image">
-                    <img
-                      src={campaign.image_url || campaign.banner_url || campaign.image || FALLBACK_CAMPAIGNS[0].image_url}
-                      alt={campaign.title}
-                    />
-                    <span className="play-button" aria-hidden="true">▶</span>
+                <Fragment key={campaign.id}>
+                  <article className="campaign-card">
+                    <a className="campaign-image" href={`#wakaf-${campaign.id}`} aria-label={`Wakaf untuk ${campaign.title}`}>
+                      <img src={image} alt={campaign.title} />
+                      <span className="play-button" aria-hidden="true">Buka</span>
+                    </a>
+                    <div className="card-body">
+                      <div className="card-tags">
+                        <span>Wakaf</span>
+                        <span>Abadi</span>
+                        <small>{location}</small>
+                      </div>
+                      <h2>{campaign.title}</h2>
+                      <p className="institution">{institution} <b>OK</b></p>
+                      <div className="progress-track" aria-label={`Progres ${progress}%`}>
+                        <span style={{ width: `${progress}%` }} />
+                      </div>
+                      <div className="amount-row">
+                        <strong>{rupiah(collected)}</strong>
+                        <span>tak terbatas</span>
+                      </div>
+                      <div className="target-row">
+                        <small>dari target <b>{rupiah(target)}</b></small>
+                        <a href={`#wakaf-${campaign.id}`} className={completed ? 'completed' : ''}>
+                          {completed ? 'Tercapai' : 'Yuk Wakaf'}
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+
+                  <div id={`wakaf-${campaign.id}`} className="wakaf-modal" role="dialog" aria-modal="true" aria-labelledby={`wakaf-title-${campaign.id}`}>
+                    <a className="wakaf-backdrop" href="#" aria-label="Tutup formulir wakaf" />
+                    <div className="wakaf-panel">
+                      <a className="modal-close" href="#" aria-label="Tutup">x</a>
+                      <div className="modal-hero">
+                        <img src={image} alt="" />
+                        <div>
+                          <span>Program Wakaf</span>
+                          <h2 id={`wakaf-title-${campaign.id}`}>{campaign.title}</h2>
+                          <p>{institution} - {location}</p>
+                        </div>
+                      </div>
+
+                      <form className="wakaf-form">
+                        <label className="amount-field">
+                          <span>Nominal Wakaf</span>
+                          <div>
+                            <strong>Rp</strong>
+                            <input inputMode="numeric" name="amount" placeholder="0" aria-label="Nominal Wakaf" />
+                          </div>
+                          <small>Nominal Wakaf minimal Rp 10.000</small>
+                        </label>
+
+                        <label>
+                          Nama Anda <b>*</b>
+                          <input name="name" placeholder="Masukkan Nama Anda" required />
+                        </label>
+
+                        <label>
+                          No. HP Anda (Opsional)
+                          <input name="phone" placeholder="08..." />
+                        </label>
+
+                        <label>
+                          Email Anda (Opsional)
+                          <input name="email" type="email" placeholder="Masukkan email anda" />
+                        </label>
+
+                        <div className="switch-row">
+                          <label><input type="checkbox" /> <span>Sembunyikan nama saya dari publikasi (Daftar Wakif)</span></label>
+                          <label><input type="checkbox" /> <span>Wakaf untuk orang lain</span></label>
+                        </div>
+
+                        <div className="terms">
+                          <p><b>1. Tujuan Pengumpulan:</b> memastikan profil wakif dapat diverifikasi dengan informasi yang valid agar syarat sah berwakaf terpenuhi.</p>
+                          <p><b>2. Komitmen:</b> data pribadi dikelola dan dijaga sesuai aturan perlindungan data yang berlaku.</p>
+                        </div>
+
+                        <label>
+                          Doa & Harapan (Opsional)
+                          <textarea name="prayer" placeholder="Tuliskan doa & harapan anda" />
+                        </label>
+
+                        <div className="payment-box">
+                          <strong>Pilih Metode Pembayaran</strong>
+                          <div className="payment-options">
+                            <label><input type="radio" name="payment" /> Transfer Bank</label>
+                            <label><input type="radio" name="payment" /> QRIS</label>
+                            <label><input type="radio" name="payment" /> Virtual Account</label>
+                          </div>
+                        </div>
+
+                        <button type="button" className="submit-wakaf">Lanjutkan Wakaf</button>
+                      </form>
+                    </div>
                   </div>
-                  <div className="card-body">
-                    <div className="card-tags">
-                      <span>Wakaf</span>
-                      <span>Abadi</span>
-                      <small>⌖ {campaign.city_name || campaign.location || 'Indonesia'}</small>
-                    </div>
-                    <h2>{campaign.title}</h2>
-                    <p className="institution">{campaign.lembaga_name || campaign.short_description || 'SatuWakaf Indonesia'} <b>◉</b></p>
-                    <div className="progress-track" aria-label={`Progres ${progress}%`}>
-                      <span style={{ width: `${progress}%` }} />
-                    </div>
-                    <div className="amount-row">
-                      <strong>{rupiah(collected)}</strong>
-                      <span>∞</span>
-                    </div>
-                    <div className="target-row">
-                      <small>dari target <b>{rupiah(target)}</b></small>
-                      <a href={`#wakaf-${campaign.id}`} className={completed ? 'completed' : ''}>
-                        {completed ? '◉ Tercapai' : 'Yuk Wakaf →'}
-                      </a>
-                    </div>
-                  </div>
-                </article>
+                </Fragment>
               );
             })}
           </div>
@@ -324,8 +414,8 @@ export default async function HomePage({
 
       <div className="mosque-silhouette" aria-hidden="true" />
       <div className="foreground-hills" aria-hidden="true" />
-      <div className="corner-decor corner-left" aria-hidden="true">☾</div>
-      <div className="corner-decor corner-right" aria-hidden="true">✦</div>
+      <div className="corner-decor corner-left" aria-hidden="true">C</div>
+      <div className="corner-decor corner-right" aria-hidden="true">*</div>
     </main>
   );
 }

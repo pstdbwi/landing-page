@@ -175,7 +175,7 @@ button, input, select { font: inherit; }
   background: #fff;
   box-shadow: 0 4px 15px rgba(20,70,66,.16);
 }
-.campaign-image { position: relative; height: 168px; overflow: hidden; background: #7ca09e; }
+.campaign-image { position: relative; display: block; height: 168px; overflow: hidden; background: #7ca09e; }
 .campaign-image::after {
   content: '';
   position: absolute;
@@ -265,6 +265,207 @@ button, input, select { font: inherit; }
   box-shadow: 0 5px 20px rgba(20,70,66,.15);
 }
 
+.wakaf-modal {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: none;
+  place-items: center;
+  padding: 24px;
+}
+.wakaf-modal:target { display: grid; }
+.wakaf-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 15, 27, .72);
+  backdrop-filter: blur(3px);
+}
+.wakaf-panel {
+  position: relative;
+  z-index: 1;
+  width: min(620px, calc(100vw - 28px));
+  max-height: min(88vh, 920px);
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 12px;
+  background: #0a2f5d;
+  color: #f8fbff;
+  box-shadow: 0 24px 80px rgba(0,0,0,.38);
+}
+.modal-close {
+  position: sticky;
+  z-index: 3;
+  top: 10px;
+  float: right;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 10px 10px -42px 0;
+  border-radius: 50%;
+  background: rgba(2, 15, 27, .82);
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+}
+.modal-hero {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 16px;
+  align-items: center;
+  min-height: 145px;
+  padding: 22px 28px;
+  background:
+    linear-gradient(90deg, rgba(11, 38, 76, .9), rgba(23, 80, 143, .7)),
+    radial-gradient(circle at 15% 25%, rgba(255,255,255,.18), transparent 30%),
+    #123f78;
+}
+.modal-hero img {
+  width: 108px;
+  height: 88px;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,.8);
+  border-radius: 8px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+}
+.modal-hero span {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #f3c85b;
+  font-size: 13px;
+  font-weight: 800;
+}
+.modal-hero h2 {
+  margin: 0;
+  color: #ffd66c;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  line-height: 1.1;
+}
+.modal-hero p {
+  margin: 8px 0 0;
+  color: rgba(255,255,255,.82);
+  font-size: 13px;
+}
+.wakaf-form {
+  display: grid;
+  gap: 16px;
+  padding: 24px 28px 28px;
+}
+.wakaf-form label {
+  display: grid;
+  gap: 8px;
+  color: #f8fbff;
+  font-size: 14px;
+  font-weight: 800;
+}
+.wakaf-form label b,
+.amount-field small {
+  color: #ff7272;
+}
+.wakaf-form input,
+.wakaf-form textarea {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.78);
+  border-radius: 7px;
+  padding: 13px 14px;
+  background: rgba(255,255,255,.18);
+  color: white;
+  outline: 0;
+}
+.wakaf-form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.wakaf-form input::placeholder,
+.wakaf-form textarea::placeholder {
+  color: rgba(255,255,255,.86);
+}
+.amount-field {
+  padding: 16px 22px;
+  border: 1px solid #ff5b76;
+  border-radius: 8px;
+  background: rgba(255,255,255,.16);
+}
+.amount-field div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.amount-field strong {
+  color: white;
+  font-size: 26px;
+}
+.amount-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 6px 0;
+  background: transparent;
+  font-size: 28px;
+  font-weight: 900;
+}
+.switch-row {
+  display: grid;
+  gap: 12px;
+  padding: 2px 0;
+}
+.switch-row label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-style: italic;
+}
+.switch-row input {
+  width: 46px;
+  height: 26px;
+  flex: 0 0 46px;
+  accent-color: #f0c75e;
+}
+.terms {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.88);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.terms p { margin: 0 0 8px; }
+.payment-box {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+.payment-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.payment-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 8px;
+  background: rgba(255,255,255,.1);
+  font-size: 12px;
+  cursor: pointer;
+}
+.payment-options input {
+  width: auto;
+  accent-color: #f0c75e;
+}
+.submit-wakaf {
+  border: 0;
+  border-radius: 8px;
+  padding: 14px 18px;
+  background: linear-gradient(90deg, #ffe89b, #d9a933);
+  color: #092d2b;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .mosque-silhouette {
   position: absolute;
   z-index: 1;
@@ -329,4 +530,12 @@ button, input, select { font: inherit; }
   .corner-decor { width: 76px; height: 76px; bottom: 18px; font-size: 42px; }
   .corner-left { left: 12px; }
   .corner-right { right: 12px; }
+  .wakaf-modal { padding: 10px; align-items: start; }
+  .wakaf-panel { width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
+  .modal-hero { grid-template-columns: 1fr; padding: 22px 18px; }
+  .modal-hero img { width: 100%; height: 150px; }
+  .wakaf-form { padding: 18px; }
+  .payment-options { grid-template-columns: 1fr; }
+  .amount-field { padding: 14px; }
+  .amount-field input { font-size: 24px; }
 }
