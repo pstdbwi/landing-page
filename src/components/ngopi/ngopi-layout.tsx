@@ -12,6 +12,7 @@ interface LayoutNgopiProps {
   footer: "landing-page" | "detail-page";
   params?: any;
   tnc?: boolean;
+  backgroundUrl?: string;
 }
 
 const topStarFieldStyle: React.CSSProperties = {
@@ -27,7 +28,14 @@ const topStarFieldStyle: React.CSSProperties = {
 
 // const MOBILE_BREAKPOINT = 640;
 
-const LayoutNgopi = ({ children, header = true, footer, params, tnc = true }: LayoutNgopiProps) => {
+const LayoutNgopi = ({
+  children,
+  header = true,
+  footer,
+  params,
+  tnc = true,
+  backgroundUrl = "/assets/wakafein/bg-kv-2026.jpg",
+}: LayoutNgopiProps) => {
   const { currentDomain } = useFeatureFlag();
 
   // const router = useRouter();
@@ -102,7 +110,7 @@ const LayoutNgopi = ({ children, header = true, footer, params, tnc = true }: La
   return (
     <div className="bg-[#071c3d]">
       <div className="fixed inset-0 z-0 bg-[#071c3d]">
-        <Image src="/assets/wakafein/bg-kv-2026.jpg" fill sizes="100vw" alt="" priority className="object-cover" />
+        <Image src={backgroundUrl} fill sizes="100vw" alt="" priority className="object-cover" />
       </div>
 
       <div

@@ -13,11 +13,12 @@ import { NgopiCardSkeleton } from "./ngopi-card-skeleton";
 
 type Props = {
   onGetTopics?: (topics: string[]) => void;
+  campaignIds?: string[];
 };
 
 const PUBLIC_API_BASE_URL = "https://api.satuwakafindonesia.id";
 
-const curatedCampaignIds = [
+const defaultCampaignIds = [
   "9d52c675-2b96-499d-a94e-224fbae26817", // Gerakan Wakaf Uang Kementerian Agama 1446 H
   "2384e557-cc9a-46b3-a809-e7d377901ebd", // Dana Abadi Pendidikan Tinggi Keagamaan Islam Berbasis Wakaf
   "ce7fcf60-7b55-4ee7-9531-9f0d599c7e60", // Dana Abadi Pendidikan Agama Islam di Sekolah Berbasis Wakaf
@@ -34,7 +35,7 @@ type CampaignSectionItem = {
   campaign: any;
 };
 
-export function NgopiCampaignSection({ onGetTopics }: Props) {
+export function NgopiCampaignSection({ onGetTopics, campaignIds }: Props) {
   const { currentDomain } = useFeatureFlag();
   const { search = "", topic = "", order_by = "", order_type = "" } = useSearchParamsEntries();
   const [campaigns, setCampaigns] = useState<CampaignSectionItem[]>([]);
@@ -49,7 +50,7 @@ export function NgopiCampaignSection({ onGetTopics }: Props) {
 
       try {
         const responses = await Promise.all(
-          curatedCampaignIds.map(async (campaignId) => {
+          (campaignIds?.length ? campaignIds : defaultCampaignIds).map(async (campaignId) => {
             const response = await fetch(`${PUBLIC_API_BASE_URL}/campaigns/${campaignId}`, {
               signal: controller.signal,
             });
@@ -79,7 +80,7 @@ export function NgopiCampaignSection({ onGetTopics }: Props) {
     fetchCuratedCampaigns();
 
     return () => controller.abort();
-  }, []);
+  }, [campaignIds]);
 
   const specialSectionCampaigns = campaigns;
 
